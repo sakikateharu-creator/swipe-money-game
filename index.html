@@ -3,44 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <title>Money Swipe</title>
+
 <style>
 body {
     margin: 0;
-    overflow: hidden;
-    background: #111;
-    color: white;
+    background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);
     font-family: Arial;
+    color: white;
     text-align: center;
 }
 
+/* Счёт */
 #score {
-    position: absolute;
-    top: 20px;
-    width: 100%;
-    font-size: 24px;
+    font-size: 28px;
+    margin-top: 40px;
 }
 
+/* Доход */
+#income {
+    opacity: 0.7;
+    margin-top: 5px;
+}
+
+/* Купюра */
 .money {
     position: absolute;
-    bottom: 0;
-    width: 120px;
-    height: 60px;
-    background: green;
-    border-radius: 8px;
+    bottom: 60px;
     left: 50%;
     transform: translateX(-50%);
+    width: 180px;
+    height: 90px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #00c853, #64dd17);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 22px;
+}
+
+/* Кнопка апгрейда */
+#upgrade {
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background: #ff9800;
+    border-radius: 10px;
 }
 </style>
+
 </head>
 <body>
 
 <div id="score">💰 0</div>
-<div id="money" class="money"></div>
+<div id="income">+1 за свайп</div>
+
+<div id="upgrade">Upgrade (10)</div>
+
+<div id="money" class="money">💵</div>
 
 <script>
-let score = 0;
+let score = parseInt(localStorage.getItem("score")) || 0;
+let income = parseInt(localStorage.getItem("income")) || 1;
+
 let startY = 0;
 let money = document.getElementById("money");
+
+updateUI();
 
 money.addEventListener("touchstart", (e) => {
     startY = e.touches[0].clientY;
@@ -55,16 +87,38 @@ money.addEventListener("touchend", (e) => {
 });
 
 function earnMoney() {
-    score += 1;
-    document.getElementById("score").innerText = "💰 " + score;
+    score += income;
+    save();
+    updateUI();
 
-    money.style.transition = "transform 0.2s";
-    money.style.transform = "translateX(-50%) translateY(-100px)";
-
+    money.style.transform = "translateX(-50%) translateY(-120px)";
     setTimeout(() => {
-        money.style.transition = "none";
         money.style.transform = "translateX(-50%)";
     }, 200);
+}
+
+document.getElementById("upgrade").onclick = () => {
+    let cost = income * 10;
+
+    if (score >= cost) {
+        score -= cost;
+        income++;
+        save();
+        updateUI();
+    } else {
+        alert("Не хватает денег");
+    }
+};
+
+function updateUI() {
+    document.getElementById("score").innerText = "💰 " + score;
+    document.getElementById("income").innerText = "+" + income + " за свайп";
+    document.getElementById("upgrade").innerText = "Upgrade (" + (income * 10) + ")";
+}
+
+function save() {
+    localStorage.setItem("score", score);
+    localStorage.setItem("income", income);
 }
 </script>
 
