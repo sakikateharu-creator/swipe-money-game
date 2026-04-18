@@ -2,123 +2,175 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Money Swipe</title>
 
 <style>
 body {
-    margin: 0;
-    background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);
-    font-family: Arial;
-    color: white;
-    text-align: center;
+    margin:0;
+    font-family:Arial;
+    background:#0d1117;
+    color:white;
+    text-align:center;
 }
 
-/* Счёт */
-#score {
-    font-size: 28px;
-    margin-top: 40px;
+/* экраны */
+.screen { display:none; }
+.active { display:block; }
+
+/* кнопки */
+.btn {
+    padding:12px;
+    margin:10px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#ff9800,#ff5722);
 }
 
-/* Доход */
-#income {
-    opacity: 0.7;
-    margin-top: 5px;
-}
-
-/* Купюра */
+/* деньги */
 .money {
-    position: absolute;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 180px;
-    height: 90px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #00c853, #64dd17);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 22px;
+    width:220px;
+    margin:40px auto;
+    transition:0.15s;
+}
+.money:active {
+    transform:scale(0.95);
 }
 
-/* Кнопка апгрейда */
-#upgrade {
-    position: absolute;
-    top: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 20px;
-    background: #ff9800;
-    border-radius: 10px;
+/* карточки */
+.card {
+    background:#161b22;
+    margin:10px;
+    padding:10px;
+    border-radius:12px;
+}
+
+/* всплывающие числа */
+.float {
+    position:absolute;
+    color:#00ffcc;
+    animation:floatUp 1s forwards;
+}
+
+@keyframes floatUp {
+    0% {opacity:1; transform:translateY(0);}
+    100% {opacity:0; transform:translateY(-80px);}
 }
 </style>
-
 </head>
+
 <body>
 
-<div id="score">💰 0</div>
-<div id="income">+1 за свайп</div>
+<div id="menu" class="screen active">
+    <h1>Money Swipe</h1>
+    <div class="btn" onclick="start()">Play</div>
+    <div class="btn" onclick="shop()">Shop</div>
+</div>
 
-<div id="upgrade">Upgrade (10)</div>
+<div id="game" class="screen">
+    <h2 id="score">💰 0</h2>
+    <div id="level">Level 1</div>
 
-<div id="money" class="money">💵</div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/US_one_dollar_bill%2C_obverse.jpg" id="money" class="money">
+
+    <div class="btn" onclick="menu()">Menu</div>
+</div>
+
+<div id="shop" class="screen">
+    <h2>Shop</h2>
+
+    <div class="card">
+        <div class="btn" onclick="buyIncome()">+1 Income (50)</div>
+        <div class="btn" onclick="buyIdle()">Idle +1/s (100)</div>
+        <div class="btn" onclick="buyMulti()">x2 (200)</div>
+    </div>
+
+    <div class="btn" onclick="menu()">Back</div>
+</div>
+
+<audio id="sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-coin-216.wav"></audio>
 
 <script>
-let score = parseInt(localStorage.getItem("score")) || 0;
-let income = parseInt(localStorage.getItem("income")) || 1;
+let score=+localStorage.score||0;
+let income=+localStorage.income||1;
+let idle=+localStorage.idle||0;
+let multi=+localStorage.multi||1;
+let level=+localStorage.level||1;
 
-let startY = 0;
-let money = document.getElementById("money");
+let last=localStorage.last||Date.now();
+score+=idle*((Date.now()-last)/1000);
 
-updateUI();
+update();
 
-money.addEventListener("touchstart", (e) => {
-    startY = e.touches[0].clientY;
-});
-
-money.addEventListener("touchend", (e) => {
-    let endY = e.changedTouches[0].clientY;
-
-    if (startY - endY > 50) {
-        earnMoney();
-    }
-});
-
-function earnMoney() {
-    score += income;
-    save();
-    updateUI();
-
-    money.style.transform = "translateX(-50%) translateY(-120px)";
-    setTimeout(() => {
-        money.style.transform = "translateX(-50%)";
-    }, 200);
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
 }
 
-document.getElementById("upgrade").onclick = () => {
-    let cost = income * 10;
+function start(){ show("game"); }
+function shop(){ show("shop"); }
+function menu(){ show("menu"); }
 
-    if (score >= cost) {
-        score -= cost;
-        income++;
-        save();
-        updateUI();
-    } else {
-        alert("Не хватает денег");
-    }
-};
+let startY=0;
+let money=document.getElementById("money");
 
-function updateUI() {
-    document.getElementById("score").innerText = "💰 " + score;
-    document.getElementById("income").innerText = "+" + income + " за свайп";
-    document.getElementById("upgrade").innerText = "Upgrade (" + (income * 10) + ")";
+money.addEventListener("touchstart",e=>{
+startY=e.touches[0].clientY;
+});
+
+money.addEventListener("touchend",e=>{
+if(startY - e.changedTouches[0].clientY > 50){
+earn(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+}
+});
+
+function earn(x,y){
+let gain=income*multi;
+score+=gain;
+
+/* звук */
+document.getElementById("sound").play();
+
+/* вибрация */
+if(navigator.vibrate) navigator.vibrate(10);
+
+/* текст */
+let el=document.createElement("div");
+el.className="float";
+el.innerText="+"+gain;
+el.style.left=x+"px";
+el.style.top=y+"px";
+document.body.appendChild(el);
+setTimeout(()=>el.remove(),1000);
+
+update();
+save();
 }
 
-function save() {
-    localStorage.setItem("score", score);
-    localStorage.setItem("income", income);
+/* апгрейды */
+function buyIncome(){ if(score>=50){score-=50; income++;}}
+function buyIdle(){ if(score>=100){score-=100; idle++;}}
+function buyMulti(){ if(score>=200){score-=200; multi*=2;}}
+
+/* авто доход */
+setInterval(()=>{
+score+=idle;
+update();
+save();
+},1000);
+
+function update(){
+level=Math.floor(score/500)+1;
+document.getElementById("score").innerText="💰 "+Math.floor(score);
+document.getElementById("level").innerText="Level "+level;
+}
+
+function save(){
+localStorage.score=score;
+localStorage.income=income;
+localStorage.idle=idle;
+localStorage.multi=multi;
+localStorage.level=level;
+localStorage.last=Date.now();
 }
 </script>
 
