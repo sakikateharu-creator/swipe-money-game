@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Money Swipe</title>
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+}
+
+#score {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    font-size: 24px;
+}
+
+.money {
+    position: absolute;
+    bottom: 0;
+    width: 120px;
+    height: 60px;
+    background: green;
+    border-radius: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+</style>
+</head>
+<body>
+
+<div id="score">💰 0</div>
+<div id="money" class="money"></div>
+
+<script>
+let score = 0;
+let startY = 0;
+let money = document.getElementById("money");
+
+money.addEventListener("touchstart", (e) => {
+    startY = e.touches[0].clientY;
+});
+
+money.addEventListener("touchend", (e) => {
+    let endY = e.changedTouches[0].clientY;
+
+    if (startY - endY > 50) {
+        earnMoney();
+    }
+});
+
+function earnMoney() {
+    score += 1;
+    document.getElementById("score").innerText = "💰 " + score;
+
+    money.style.transition = "transform 0.2s";
+    money.style.transform = "translateX(-50%) translateY(-100px)";
+
+    setTimeout(() => {
+        money.style.transition = "none";
+        money.style.transform = "translateX(-50%)";
+    }, 200);
+}
+</script>
+
+</body>
+</html>
