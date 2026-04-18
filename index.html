@@ -14,11 +14,9 @@ body {
     text-align:center;
 }
 
-/* экраны */
 .screen { display:none; }
 .active { display:block; }
 
-/* кнопки */
 .btn {
     padding:12px;
     margin:10px;
@@ -26,7 +24,6 @@ body {
     background:linear-gradient(135deg,#ff9800,#ff5722);
 }
 
-/* деньги */
 .money {
     width:220px;
     margin:40px auto;
@@ -36,7 +33,6 @@ body {
     transform:scale(0.95);
 }
 
-/* карточки */
 .card {
     background:#161b22;
     margin:10px;
@@ -44,7 +40,6 @@ body {
     border-radius:12px;
 }
 
-/* всплывающие числа */
 .float {
     position:absolute;
     color:#00ffcc;
@@ -70,7 +65,8 @@ body {
     <h2 id="score">💰 0</h2>
     <div id="level">Level 1</div>
 
-    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/US_one_dollar_bill%2C_obverse.jpg" id="money" class="money">
+    <!-- ВОТ ЗДЕСЬ Я УЖЕ ПОСТАВИЛ НОРМ КАРТИНКУ -->
+    <img src="https://i.imgur.com/8QfZQ0G.png" id="money" class="money">
 
     <div class="btn" onclick="menu()">Menu</div>
 </div>
@@ -127,13 +123,9 @@ function earn(x,y){
 let gain=income*multi;
 score+=gain;
 
-/* звук */
 document.getElementById("sound").play();
-
-/* вибрация */
 if(navigator.vibrate) navigator.vibrate(10);
 
-/* текст */
 let el=document.createElement("div");
 el.className="float";
 el.innerText="+"+gain;
@@ -146,12 +138,10 @@ update();
 save();
 }
 
-/* апгрейды */
 function buyIncome(){ if(score>=50){score-=50; income++;}}
 function buyIdle(){ if(score>=100){score-=100; idle++;}}
 function buyMulti(){ if(score>=200){score-=200; multi*=2;}}
 
-/* авто доход */
 setInterval(()=>{
 score+=idle;
 update();
