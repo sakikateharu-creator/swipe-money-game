@@ -2,86 +2,41 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Money Swipe PRO</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Money Swipe">
+
+<!-- иконка -->
+<link rel="apple-touch-icon" href="icon.png">
+
+<title>Money Swipe</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial;
-    background: radial-gradient(circle at top, #0f2027, #203a43, #000);
-    color: white;
-    text-align: center;
+body{
+margin:0;
+font-family:-apple-system;
+background:#0d1117;
+color:white;
+text-align:center;
+touch-action:manipulation;
+user-select:none;
 }
 
-/* HUD */
-#money {
-    font-size: 38px;
-    margin-top: 20px;
-}
+#money{font-size:30px;margin-top:10px;}
+#level{opacity:.7;}
 
-#level {
-    opacity: 0.7;
-    margin-bottom: 10px;
-}
+#bill{width:200px;margin-top:40px;}
+#bill:active{transform:scale(.9);}
 
-/* игровая зона */
-#gameArea {
-    width: 320px;
-    height: 220px;
-    margin: 20px auto;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.05);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* купюра */
-#bill {
-    width: 180px;
-    transition: 0.1s;
-}
-
-#bill:active {
-    transform: scale(0.9) rotate(-3deg);
-}
-
-/* кнопки */
-button {
-    margin: 8px;
-    padding: 14px 22px;
-    border: none;
-    border-radius: 14px;
-    background: linear-gradient(45deg, orange, red);
-    color: white;
-    font-size: 15px;
-}
-
-/* магазин */
-#shop {
-    display: none;
-    margin-top: 20px;
-}
-
-.skin {
-    padding: 10px;
-    margin: 6px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.1);
-}
-
-/* эффект */
-.effect {
-    position: absolute;
-    color: lime;
-    font-size: 20px;
-    pointer-events: none;
-    animation: float 0.7s forwards;
-}
-
-@keyframes float {
-    0% { transform: translate(-50%, -50%); opacity: 1; }
-    100% { transform: translate(-50%, -140%); opacity: 0; }
+button{
+margin:10px;
+padding:14px;
+border:none;
+border-radius:12px;
+background:orange;
+color:white;
 }
 </style>
 </head>
@@ -91,141 +46,21 @@ button {
 <div id="money">💰 0</div>
 <div id="level">Level 1</div>
 
-<div id="gameArea">
 <svg id="bill" viewBox="0 0 200 100">
-    <rect id="billColor" x="5" y="5" width="190" height="90" rx="15" fill="#4CAF50"/>
-    <circle cx="100" cy="50" r="20" fill="#2e7d32"/>
-    <text x="100" y="58" text-anchor="middle" fill="white" font-size="22">$</text>
+<rect x="5" y="5" width="190" height="90" rx="15" fill="#4CAF50"/>
+<circle cx="100" cy="50" r="20" fill="#2e7d32"/>
+<text x="100" y="58" text-anchor="middle" fill="white" font-size="22">$</text>
 </svg>
-</div>
-
-<button onclick="upgrade()">Upgrade</button>
-<button onclick="buyAuto()">Auto</button>
-<button onclick="toggleShop()">Shop</button>
-
-<div id="shop">
-    <div class="skin">
-        🔵 Blue Skin (200)
-        <button onclick="buySkin('#2196F3',200)">Buy</button>
-    </div>
-    <div class="skin">
-        🟣 Purple Skin (400)
-        <button onclick="buySkin('#9C27B0',400)">Buy</button>
-    </div>
-    <div class="skin">
-        🟠 Gold Skin (800)
-        <button onclick="buySkin('#FF9800',800)">Buy</button>
-    </div>
-</div>
 
 <script>
-let money = 0;
-let income = 1;
-let level = 1;
-let auto = 0;
-let currentColor = "#4CAF50";
+let money=0;
 
-const moneyEl = document.getElementById("money");
-const levelEl = document.getElementById("level");
-const bill = document.getElementById("bill");
-const billColor = document.getElementById("billColor");
+document.getElementById("bill").onclick=()=>{
+money++;
+document.getElementById("money").innerText="💰 "+money;
 
-bill.addEventListener("touchstart", clickMoney);
-bill.addEventListener("mousedown", clickMoney);
-
-function clickMoney(e) {
-    money += income;
-    spawnEffect(e);
-    update();
-}
-
-function update() {
-    moneyEl.innerText = "💰 " + money;
-    levelEl.innerText = "Level " + level;
-    save();
-}
-
-function upgrade() {
-    let cost = level * 50;
-
-    if (money >= cost) {
-        money -= cost;
-        income++;
-        level++;
-        update();
-    } else alert("Не хватает");
-}
-
-function buyAuto() {
-    let cost = (auto + 1) * 150;
-
-    if (money >= cost) {
-        money -= cost;
-        auto++;
-        update();
-    } else alert("Мало денег");
-}
-
-function toggleShop() {
-    let shop = document.getElementById("shop");
-    shop.style.display = shop.style.display === "none" ? "block" : "none";
-}
-
-function buySkin(color, cost) {
-    if (money >= cost) {
-        money -= cost;
-        currentColor = color;
-        billColor.setAttribute("fill", color);
-        update();
-    } else alert("Недостаточно");
-}
-
-/* авто доход */
-setInterval(() => {
-    if (auto > 0) {
-        money += auto;
-        update();
-    }
-}, 1000);
-
-/* эффект */
-function spawnEffect(e) {
-    let el = document.createElement("div");
-    el.className = "effect";
-    el.innerText = "+" + income;
-
-    let x = e.touches ? e.touches[0].clientX : e.clientX;
-    let y = e.touches ? e.touches[0].clientY : e.clientY;
-
-    el.style.left = x + "px";
-    el.style.top = y + "px";
-
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-}
-
-/* сохранение */
-function save() {
-    localStorage.setItem("moneyGame", JSON.stringify({
-        money, income, level, auto, currentColor
-    }));
-}
-
-function load() {
-    let data = JSON.parse(localStorage.getItem("moneyGame"));
-    if (data) {
-        money = data.money;
-        income = data.income;
-        level = data.level;
-        auto = data.auto;
-        currentColor = data.currentColor || "#4CAF50";
-
-        billColor.setAttribute("fill", currentColor);
-        update();
-    }
-}
-
-load();
+if(navigator.vibrate) navigator.vibrate(10);
+};
 </script>
 
 </body>
