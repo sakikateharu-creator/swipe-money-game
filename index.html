@@ -3,40 +3,78 @@
 <head>
 <meta charset="UTF-8">
 
+<!-- 💥 УБИРАЕМ ЗУМ -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Money Swipe">
 
-<!-- иконка -->
+<title>Money Swipe ULTRA</title>
+
 <link rel="apple-touch-icon" href="icon.PNG">
 
-<title>Money Swipe</title>
-
 <style>
-body{
-margin:0;
-font-family:-apple-system;
-background:#0d1117;
-color:white;
-text-align:center;
-touch-action:manipulation;
-user-select:none;
+body {
+  margin: 0;
+  font-family: -apple-system, Arial;
+  background: linear-gradient(180deg, #0d1b2a, #000);
+  color: white;
+  text-align: center;
+
+  touch-action: manipulation;
+  user-select: none;
 }
 
-#money{font-size:30px;margin-top:10px;}
-#level{opacity:.7;}
+#money {
+  font-size: 34px;
+  margin-top: 20px;
+  font-weight: bold;
+}
 
-#bill{width:200px;margin-top:40px;}
-#bill:active{transform:scale(.9);}
+#level {
+  opacity: 0.6;
+}
 
-button{
-margin:10px;
-padding:14px;
-border:none;
-border-radius:12px;
-background:orange;
-color:white;
+#game {
+  position: relative;
+  margin-top: 40px;
+}
+
+#bill {
+  width: 240px;
+  transition: 0.08s;
+}
+
+#bill:active {
+  transform: scale(0.85);
+}
+
+button {
+  margin: 10px;
+  padding: 14px 25px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(45deg, orange, red);
+  color: white;
+  font-size: 16px;
+}
+
+/* 💸 вылетающие деньги */
+.fly {
+  position: absolute;
+  font-size: 20px;
+  animation: fly 0.8s forwards;
+}
+
+@keyframes fly {
+  0% {opacity:1; transform:translateY(0);}
+  100% {opacity:0; transform:translateY(-100px);}
+}
+
+/* 💥 крит текст */
+.crit {
+  position: fixed;
+  top: 40%;
+  width: 100%;
+  font-size: 40px;
+  color: gold;
 }
 </style>
 </head>
@@ -46,21 +84,114 @@ color:white;
 <div id="money">💰 0</div>
 <div id="level">Level 1</div>
 
-<svg id="bill" viewBox="0 0 200 100">
-<rect x="5" y="5" width="190" height="90" rx="15" fill="#4CAF50"/>
-<circle cx="100" cy="50" r="20" fill="#2e7d32"/>
-<text x="100" y="58" text-anchor="middle" fill="white" font-size="22">$</text>
-</svg>
+<div id="game">
+  <img id="bill" src="icon.PNG">
+</div>
+
+<div>
+  <button onclick="upgrade()">⚡ Upgrade</button>
+  <button onclick="autoUpgrade()">🤖 Auto</button>
+</div>
+
+<audio id="sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-coin-216.wav"></audio>
 
 <script>
-let money=0;
+let money=0, level=1, power=1, auto=0;
 
-document.getElementById("bill").onclick=()=>{
-money++;
-document.getElementById("money").innerText="💰 "+money;
+let upgradeCost=50, autoCost=100;
 
+const moneyEl=document.getElementById("money");
+const levelEl=document.getElementById("level");
+const bill=document.getElementById("bill");
+const game=document.getElementById("game");
+const sound=document.getElementById("sound");
+
+/* загрузка */
+if(localStorage.save){
+let d=JSON.parse(localStorage.save);
+money=d.money; level=d.level; power=d.power; auto=d.auto;
+}
+
+/* тап */
+bill.addEventListener("click", (e)=>{
+let gain=power;
+
+/* крит */
+if(Math.random()<0.1){
+gain*=5;
+showCrit();
+}
+
+money+=gain;
+
+/* звук */
+sound.currentTime=0;
+sound.play();
+
+/* вибрация */
 if(navigator.vibrate) navigator.vibrate(10);
-};
+
+/* анимация */
+bill.style.transform="scale(0.85)";
+setTimeout(()=>bill.style.transform="scale(1)",80);
+
+/* текст */
+let el=document.createElement("div");
+el.className="fly";
+el.innerText="+"+gain;
+el.style.left=(e.offsetX+80)+"px";
+el.style.top=(e.offsetY)+"px";
+game.appendChild(el);
+setTimeout(()=>el.remove(),800);
+
+update();
+});
+
+/* крит надпись */
+function showCrit(){
+let el=document.createElement("div");
+el.className="crit";
+el.innerText="CRIT!";
+document.body.appendChild(el);
+setTimeout(()=>el.remove(),400);
+}
+
+/* апгрейды */
+function upgrade(){
+if(money>=upgradeCost){
+money-=upgradeCost;
+power++;
+level++;
+upgradeCost=Math.floor(upgradeCost*1.5);
+update();
+}
+}
+
+function autoUpgrade(){
+if(money>=autoCost){
+money-=autoCost;
+auto++;
+autoCost=Math.floor(autoCost*1.6);
+update();
+}
+}
+
+/* авто доход */
+setInterval(()=>{
+money+=auto;
+update();
+},1000);
+
+/* обновление */
+function update(){
+moneyEl.innerText="💰 "+money;
+levelEl.innerText="Level "+level;
+
+/* сохранение */
+localStorage.save=JSON.stringify({money,level,power,auto});
+}
+
+update();
 </script>
 
 </body>
