@@ -1,167 +1,182 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Money Swipe</title>
+<title>Money Swipe ULTRA</title>
 
 <style>
 body {
-    margin:0;
-    font-family:Arial;
-    background:#0d1117;
-    color:white;
-    text-align:center;
+    margin: 0;
+    font-family: Arial;
+    background: radial-gradient(circle at top, #0f2027, #203a43, #000);
+    color: white;
+    text-align: center;
 }
 
-.screen { display:none; }
-.active { display:block; }
-
-.btn {
-    padding:12px;
-    margin:10px;
-    border-radius:12px;
-    background:linear-gradient(135deg,#ff9800,#ff5722);
+#money {
+    font-size: 36px;
+    margin-top: 20px;
 }
 
-.money {
-    width:220px;
-    margin:40px auto;
-    transition:0.15s;
-}
-.money:active {
-    transform:scale(0.95);
+#level {
+    opacity: 0.7;
 }
 
-.card {
-    background:#161b22;
-    margin:10px;
-    padding:10px;
-    border-radius:12px;
+#gameArea {
+    width: 300px;
+    height: 220px;
+    margin: 20px auto;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.float {
-    position:absolute;
-    color:#00ffcc;
-    animation:floatUp 1s forwards;
+#bill {
+    width: 180px;
+    cursor: pointer;
+    transition: 0.1s;
 }
 
-@keyframes floatUp {
-    0% {opacity:1; transform:translateY(0);}
-    100% {opacity:0; transform:translateY(-80px);}
+#bill:active {
+    transform: scale(0.9);
+}
+
+button {
+    margin: 10px;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(45deg, orange, red);
+    color: white;
+    font-size: 16px;
+}
+
+.effect {
+    position: absolute;
+    color: lime;
+    font-size: 20px;
+    animation: float 0.6s forwards;
+}
+
+@keyframes float {
+    0% { transform: translate(-50%, -50%); opacity: 1; }
+    100% { transform: translate(-50%, -120%); opacity: 0; }
 }
 </style>
 </head>
 
 <body>
 
-<div id="menu" class="screen active">
-    <h1>Money Swipe</h1>
-    <div class="btn" onclick="start()">Play</div>
-    <div class="btn" onclick="shop()">Shop</div>
+<div id="money">💰 0</div>
+<div id="level">Level 1</div>
+
+<div id="gameArea">
+<svg id="bill" viewBox="0 0 200 100">
+    <rect x="5" y="5" width="190" height="90" rx="15" fill="#4CAF50"/>
+    <circle cx="100" cy="50" r="20" fill="#2e7d32"/>
+    <text x="100" y="58" text-anchor="middle" fill="white" font-size="22">$</text>
+</svg>
 </div>
 
-<div id="game" class="screen">
-    <h2 id="score">💰 0</h2>
-    <div id="level">Level 1</div>
-
-    <!-- ВОТ ЗДЕСЬ Я УЖЕ ПОСТАВИЛ НОРМ КАРТИНКУ -->
-    <img src="https://i.imgur.com/8QfZQ0G.png" id="money" class="money">
-
-    <div class="btn" onclick="menu()">Menu</div>
-</div>
-
-<div id="shop" class="screen">
-    <h2>Shop</h2>
-
-    <div class="card">
-        <div class="btn" onclick="buyIncome()">+1 Income (50)</div>
-        <div class="btn" onclick="buyIdle()">Idle +1/s (100)</div>
-        <div class="btn" onclick="buyMulti()">x2 (200)</div>
-    </div>
-
-    <div class="btn" onclick="menu()">Back</div>
-</div>
-
-<audio id="sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-coin-216.wav"></audio>
+<button onclick="upgrade()">Upgrade</button>
+<button onclick="buyAuto()">Auto Income</button>
 
 <script>
-let score=+localStorage.score||0;
-let income=+localStorage.income||1;
-let idle=+localStorage.idle||0;
-let multi=+localStorage.multi||1;
-let level=+localStorage.level||1;
+let money = 0;
+let income = 1;
+let level = 1;
+let auto = 0;
 
-let last=localStorage.last||Date.now();
-score+=idle*((Date.now()-last)/1000);
+const moneyEl = document.getElementById("money");
+const levelEl = document.getElementById("level");
+const bill = document.getElementById("bill");
 
-update();
+bill.addEventListener("touchstart", clickMoney);
+bill.addEventListener("mousedown", clickMoney);
 
-function show(id){
-document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-document.getElementById(id).classList.add("active");
+function clickMoney(e) {
+    money += income;
+    spawnEffect(e);
+    update();
 }
 
-function start(){ show("game"); }
-function shop(){ show("shop"); }
-function menu(){ show("menu"); }
-
-let startY=0;
-let money=document.getElementById("money");
-
-money.addEventListener("touchstart",e=>{
-startY=e.touches[0].clientY;
-});
-
-money.addEventListener("touchend",e=>{
-if(startY - e.changedTouches[0].clientY > 50){
-earn(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
-}
-});
-
-function earn(x,y){
-let gain=income*multi;
-score+=gain;
-
-document.getElementById("sound").play();
-if(navigator.vibrate) navigator.vibrate(10);
-
-let el=document.createElement("div");
-el.className="float";
-el.innerText="+"+gain;
-el.style.left=x+"px";
-el.style.top=y+"px";
-document.body.appendChild(el);
-setTimeout(()=>el.remove(),1000);
-
-update();
-save();
+function update() {
+    moneyEl.innerText = "💰 " + money;
+    levelEl.innerText = "Level " + level;
+    save();
 }
 
-function buyIncome(){ if(score>=50){score-=50; income++;}}
-function buyIdle(){ if(score>=100){score-=100; idle++;}}
-function buyMulti(){ if(score>=200){score-=200; multi*=2;}}
+function upgrade() {
+    let cost = level * 50;
 
-setInterval(()=>{
-score+=idle;
-update();
-save();
-},1000);
+    if (money >= cost) {
+        money -= cost;
+        income++;
+        level++;
 
-function update(){
-level=Math.floor(score/500)+1;
-document.getElementById("score").innerText="💰 "+Math.floor(score);
-document.getElementById("level").innerText="Level "+level;
+        let colors = ["#4CAF50","#2196F3","#9C27B0","#FF9800","#F44336"];
+        bill.querySelector("rect").setAttribute("fill", colors[level % colors.length]);
+
+        update();
+    } else {
+        alert("Мало денег");
+    }
 }
 
-function save(){
-localStorage.score=score;
-localStorage.income=income;
-localStorage.idle=idle;
-localStorage.multi=multi;
-localStorage.level=level;
-localStorage.last=Date.now();
+function buyAuto() {
+    let cost = (auto + 1) * 100;
+
+    if (money >= cost) {
+        money -= cost;
+        auto++;
+        update();
+    } else {
+        alert("Недостаточно");
+    }
 }
+
+setInterval(() => {
+    if (auto > 0) {
+        money += auto;
+        update();
+    }
+}, 1000);
+
+function spawnEffect(e) {
+    let el = document.createElement("div");
+    el.className = "effect";
+    el.innerText = "+" + income;
+
+    let x = e.touches ? e.touches[0].clientX : e.clientX;
+    let y = e.touches ? e.touches[0].clientY : e.clientY;
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 600);
+}
+
+function save() {
+    localStorage.setItem("moneyGame", JSON.stringify({
+        money, income, level, auto
+    }));
+}
+
+function load() {
+    let data = JSON.parse(localStorage.getItem("moneyGame"));
+    if (data) {
+        money = data.money;
+        income = data.income;
+        level = data.level;
+        auto = data.auto;
+        update();
+    }
+}
+
+load();
 </script>
 
 </body>
