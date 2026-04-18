@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Money Swipe ULTRA</title>
+<title>Money Swipe PRO</title>
 
 <style>
 body {
@@ -13,17 +13,20 @@ body {
     text-align: center;
 }
 
+/* HUD */
 #money {
-    font-size: 36px;
+    font-size: 38px;
     margin-top: 20px;
 }
 
 #level {
     opacity: 0.7;
+    margin-bottom: 10px;
 }
 
+/* игровая зона */
 #gameArea {
-    width: 300px;
+    width: 320px;
     height: 220px;
     margin: 20px auto;
     border-radius: 20px;
@@ -33,36 +36,52 @@ body {
     align-items: center;
 }
 
+/* купюра */
 #bill {
     width: 180px;
-    cursor: pointer;
     transition: 0.1s;
 }
 
 #bill:active {
-    transform: scale(0.9);
+    transform: scale(0.9) rotate(-3deg);
 }
 
+/* кнопки */
 button {
-    margin: 10px;
-    padding: 15px 25px;
+    margin: 8px;
+    padding: 14px 22px;
     border: none;
-    border-radius: 15px;
+    border-radius: 14px;
     background: linear-gradient(45deg, orange, red);
     color: white;
-    font-size: 16px;
+    font-size: 15px;
 }
 
+/* магазин */
+#shop {
+    display: none;
+    margin-top: 20px;
+}
+
+.skin {
+    padding: 10px;
+    margin: 6px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+}
+
+/* эффект */
 .effect {
     position: absolute;
     color: lime;
     font-size: 20px;
-    animation: float 0.6s forwards;
+    pointer-events: none;
+    animation: float 0.7s forwards;
 }
 
 @keyframes float {
     0% { transform: translate(-50%, -50%); opacity: 1; }
-    100% { transform: translate(-50%, -120%); opacity: 0; }
+    100% { transform: translate(-50%, -140%); opacity: 0; }
 }
 </style>
 </head>
@@ -74,24 +93,42 @@ button {
 
 <div id="gameArea">
 <svg id="bill" viewBox="0 0 200 100">
-    <rect x="5" y="5" width="190" height="90" rx="15" fill="#4CAF50"/>
+    <rect id="billColor" x="5" y="5" width="190" height="90" rx="15" fill="#4CAF50"/>
     <circle cx="100" cy="50" r="20" fill="#2e7d32"/>
     <text x="100" y="58" text-anchor="middle" fill="white" font-size="22">$</text>
 </svg>
 </div>
 
 <button onclick="upgrade()">Upgrade</button>
-<button onclick="buyAuto()">Auto Income</button>
+<button onclick="buyAuto()">Auto</button>
+<button onclick="toggleShop()">Shop</button>
+
+<div id="shop">
+    <div class="skin">
+        🔵 Blue Skin (200)
+        <button onclick="buySkin('#2196F3',200)">Buy</button>
+    </div>
+    <div class="skin">
+        🟣 Purple Skin (400)
+        <button onclick="buySkin('#9C27B0',400)">Buy</button>
+    </div>
+    <div class="skin">
+        🟠 Gold Skin (800)
+        <button onclick="buySkin('#FF9800',800)">Buy</button>
+    </div>
+</div>
 
 <script>
 let money = 0;
 let income = 1;
 let level = 1;
 let auto = 0;
+let currentColor = "#4CAF50";
 
 const moneyEl = document.getElementById("money");
 const levelEl = document.getElementById("level");
 const bill = document.getElementById("bill");
+const billColor = document.getElementById("billColor");
 
 bill.addEventListener("touchstart", clickMoney);
 bill.addEventListener("mousedown", clickMoney);
@@ -115,28 +152,35 @@ function upgrade() {
         money -= cost;
         income++;
         level++;
-
-        let colors = ["#4CAF50","#2196F3","#9C27B0","#FF9800","#F44336"];
-        bill.querySelector("rect").setAttribute("fill", colors[level % colors.length]);
-
         update();
-    } else {
-        alert("Мало денег");
-    }
+    } else alert("Не хватает");
 }
 
 function buyAuto() {
-    let cost = (auto + 1) * 100;
+    let cost = (auto + 1) * 150;
 
     if (money >= cost) {
         money -= cost;
         auto++;
         update();
-    } else {
-        alert("Недостаточно");
-    }
+    } else alert("Мало денег");
 }
 
+function toggleShop() {
+    let shop = document.getElementById("shop");
+    shop.style.display = shop.style.display === "none" ? "block" : "none";
+}
+
+function buySkin(color, cost) {
+    if (money >= cost) {
+        money -= cost;
+        currentColor = color;
+        billColor.setAttribute("fill", color);
+        update();
+    } else alert("Недостаточно");
+}
+
+/* авто доход */
 setInterval(() => {
     if (auto > 0) {
         money += auto;
@@ -144,6 +188,7 @@ setInterval(() => {
     }
 }, 1000);
 
+/* эффект */
 function spawnEffect(e) {
     let el = document.createElement("div");
     el.className = "effect";
@@ -156,12 +201,13 @@ function spawnEffect(e) {
     el.style.top = y + "px";
 
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 600);
+    setTimeout(() => el.remove(), 700);
 }
 
+/* сохранение */
 function save() {
     localStorage.setItem("moneyGame", JSON.stringify({
-        money, income, level, auto
+        money, income, level, auto, currentColor
     }));
 }
 
@@ -172,6 +218,9 @@ function load() {
         income = data.income;
         level = data.level;
         auto = data.auto;
+        currentColor = data.currentColor || "#4CAF50";
+
+        billColor.setAttribute("fill", currentColor);
         update();
     }
 }
