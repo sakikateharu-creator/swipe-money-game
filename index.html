@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Money Swipe">
@@ -16,42 +16,68 @@
 body{
 margin:0;
 font-family:-apple-system;
-background:#0d1117;
+background:linear-gradient(180deg,#0a0f1c,#0d1628);
 color:white;
 text-align:center;
 touch-action:manipulation;
 user-select:none;
 }
 
-#money{font-size:32px;margin-top:10px;}
-#level{opacity:.7;}
+#money{
+font-size:36px;
+margin-top:20px;
+font-weight:700;
+}
+
+#level{
+opacity:.6;
+margin-bottom:10px;
+}
 
 #bill{
-width:230px;
-margin-top:40px;
-transition:.1s;
+width:260px;
+margin-top:30px;
+transition:0.1s;
+filter:drop-shadow(0 10px 20px rgba(0,0,0,0.6));
 }
 
-#bill:active{transform:scale(.9);}
+#bill:active{
+transform:scale(.9) rotate(-2deg);
+}
 
 button{
-margin:8px;
-padding:12px 20px;
+margin:10px;
+padding:14px 26px;
 border:none;
 border-radius:14px;
-background:linear-gradient(45deg,orange,red);
+font-size:16px;
+font-weight:600;
 color:white;
+background:linear-gradient(45deg,#ff7a00,#ff2d2d);
+box-shadow:0 6px 15px rgba(255,80,0,0.4);
 }
 
-#shop{
-display:none;
-}
-
-.skin{
-margin:6px;
+.shop{
+margin-top:20px;
 padding:10px;
-background:#161b22;
-border-radius:10px;
+}
+
+.item{
+background:rgba(255,255,255,0.05);
+border-radius:16px;
+padding:15px;
+margin:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.dot{
+width:18px;
+height:18px;
+border-radius:50%;
+display:inline-block;
+margin-right:10px;
 }
 </style>
 </head>
@@ -61,98 +87,120 @@ border-radius:10px;
 <div id="money">💰 0</div>
 <div id="level">Level 1</div>
 
-<img id="bill" src="icon.PNG">
+<img id="bill" src="money.PNG">
 
 <br>
 
 <button onclick="upgrade()">Upgrade</button>
 <button onclick="toggleShop()">Shop</button>
 
-<div id="shop">
+<div id="shop" class="shop" style="display:none;">
+  
+  <div class="item">
+    <div><span class="dot" style="background:green"></span>Default</div>
+    <button onclick="setSkin('money.PNG')">Use</button>
+  </div>
 
-<div class="skin">
-🟢 Default (free)
-<button onclick="setSkin('icon.PNG')">Use</button>
-</div>
+  <div class="item">
+    <div><span class="dot" style="background:blue"></span>Dollar 1 (200)</div>
+    <button onclick="buySkin('dollar1.PNG',200)">Buy</button>
+  </div>
 
-<div class="skin">
-🔵 Blue (200)
-<button onclick="buySkin('https://i.imgur.com/8Qf6Y7h.png',200)">Buy</button>
-</div>
+  <div class="item">
+    <div><span class="dot" style="background:purple"></span>Dollar 2 (500)</div>
+    <button onclick="buySkin('dollar2.PNG',500)">Buy</button>
+  </div>
 
-<div class="skin">
-🟣 Purple (400)
-<button onclick="buySkin('https://i.imgur.com/L6X4dVQ.png',400)">Buy</button>
-</div>
-
-<div class="skin">
-🟡 Gold (800)
-<button onclick="buySkin('https://i.imgur.com/6XKQZQp.png',800)">Buy</button>
-</div>
+  <div class="item">
+    <div><span class="dot" style="background:gold"></span>Dollar 3 (1200)</div>
+    <button onclick="buySkin('dollar3.PNG',1200)">Buy</button>
+  </div>
 
 </div>
 
 <script>
-let money=0,level=1,power=1;
-let skin="icon.PNG";
+let money = 0;
+let perTap = 1;
+let level = 1;
+let upgradeCost = 50;
 
-const moneyEl=document.getElementById("money");
-const levelEl=document.getElementById("level");
-const bill=document.getElementById("bill");
+let owned = ["money.PNG"];
+let currentSkin = "money.PNG";
 
-/* load */
+const bill = document.getElementById("bill");
+
+/* загрузка */
 if(localStorage.save){
-let d=JSON.parse(localStorage.save);
-money=d.money||0;
-level=d.level||1;
-power=d.power||1;
-skin=d.skin||"icon.PNG";
-bill.src=skin;
+  const d = JSON.parse(localStorage.save);
+  money = d.money || 0;
+  perTap = d.perTap || 1;
+  level = d.level || 1;
+  upgradeCost = d.upgradeCost || 50;
+  owned = d.owned || ["money.PNG"];
+  currentSkin = d.currentSkin || "money.PNG";
+  bill.src = currentSkin;
 }
 
-/* tap */
-bill.onclick=()=>{
-money+=power;
-if(navigator.vibrate) navigator.vibrate(10);
-update();
+/* тап */
+bill.onclick = () => {
+  money += perTap;
+
+  if(navigator.vibrate) navigator.vibrate(10);
+
+  bill.style.transform="scale(0.9)";
+  setTimeout(()=>bill.style.transform="scale(1)",80);
+
+  update();
 };
 
-/* upgrade */
+/* апгрейд */
 function upgrade(){
-if(money>=50){
-money-=50;
-power++;
-level++;
-update();
-}
+  if(money >= upgradeCost){
+    money -= upgradeCost;
+    perTap += 1;
+    level++;
+
+    upgradeCost = Math.floor(upgradeCost * 1.8 + 25);
+
+    update();
+  }
 }
 
-/* shop */
+/* магазин */
 function toggleShop(){
-let s=document.getElementById("shop");
-s.style.display=s.style.display=="none"?"block":"none";
+  let shop = document.getElementById("shop");
+  shop.style.display = shop.style.display === "none" ? "block" : "none";
 }
 
-function buySkin(url,cost){
-if(money>=cost){
-money-=cost;
-skin=url;
-bill.src=url;
-update();
-}
+function buySkin(name, price){
+  if(owned.includes(name)){
+    setSkin(name);
+    return;
+  }
+
+  if(money >= price){
+    money -= price;
+    owned.push(name);
+    setSkin(name);
+    update();
+  } else {
+    alert("Не хватает денег");
+  }
 }
 
-function setSkin(url){
-skin=url;
-bill.src=url;
-update();
+function setSkin(name){
+  currentSkin = name;
+  bill.src = name;
 }
 
-/* update */
+/* обновление */
 function update(){
-moneyEl.innerText="💰 "+money;
-levelEl.innerText="Level "+level;
-localStorage.save=JSON.stringify({money,level,power,skin});
+  document.getElementById("money").innerText = "💰 " + money;
+  document.getElementById("level").innerText = "Level " + level + " | +" + perTap + " / tap";
+
+  localStorage.save = JSON.stringify({
+    money, perTap, level, upgradeCost, owned, currentSkin
+  });
 }
 
 update();
